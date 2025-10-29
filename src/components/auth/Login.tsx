@@ -43,9 +43,7 @@ const Login = () => {
       },
       {
         onSuccess: (data) => {
-          localStorage.setItem("access_token", data.access);
-          localStorage.setItem("refresh_token", data.refresh);
-          localStorage.setItem("user_id", data.user.id);
+          localStorage.setItem("user_id", String(data.user.id));
           console.log("User logged in successfully:", data.user.id);
         },
         onError: (error) => {

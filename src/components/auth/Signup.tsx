@@ -17,12 +17,14 @@ import { CountrySelector } from "@/components/common/CountrySelector";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect } from "react";
-// import { useValidateFullPhone } from "@/store/server/auth/useValidatePhone";
-// import { useCheckMobile } from "@/store/server/auth/useCheckMobile";
+import { useSendOtp } from "@/store/server/auth/useSendOtp";
+import { useValidateFullPhone } from "@/store/server/auth/useValidatePhone";
+import { useCheckMobile } from "@/store/server/auth/useCheckMobile";
 
 const Signup = () => {
-  // const { mutate: validatePhone } = useValidateFullPhone();
-  // const { mutate: checkMobile } = useCheckMobile();
+  const { mutate: validatePhone } = useValidateFullPhone();
+  const { mutate: checkMobile } = useCheckMobile();
+  const { mutate: sendOtp, isPending } = useSendOtp();
 
   const form = useForm<TSignupValues>({
     resolver: zodResolver(signupSchema),
@@ -34,6 +36,7 @@ const Signup = () => {
       phoneCode: "",
       phoneNumber: "",
       specialty: "",
+      country: "",
     },
   });
   const router = useRouter();
@@ -53,10 +56,52 @@ const Signup = () => {
     fetchCountry();
   }, [form]);
 
-  const onSubmit = async (values: TSignupValues) => {
-    console.log(values);
-    
-    router.push("/otp");
+  const onSubmit = (values: TSignupValues) => {
+    const fullPhone = `${values.phoneCode}${values.phoneNumber}`;
+
+    validatePhone(fullPhone, {
+      onSuccess: (validateRes) => {
+        console.log("Phone validated:", validateRes);
+
+        checkMobile(fullPhone, {
+          onSuccess: (checkRes) => {
+            console.log("Mobile available:", checkRes);
+            sendOtp(
+              { email: values.email },
+              {
+                onSuccess: (otpRes) => {
+                  console.log("OTP sent:", otpRes);
+                  localStorage.setItem("signup_email", values.email)
+                  localStorage.setItem("signup_data", JSON.stringify(values));
+                  router.push("/otp");
+                },
+                onError: (otpErr) => {
+                  console.error("Failed to send OTP:", otpErr);
+                  form.setError("email", {
+                    type: "manual",
+                    message: "This email is already registered",
+                  });
+                },
+              }
+            );
+          },
+          onError: (checkErr) => {
+            console.error("Mobile already exists:", checkErr);
+            form.setError("phoneNumber", {
+              type: "manual",
+              message: "This phone number is already registered",
+            });
+          },
+        });
+      },
+      onError: (validateErr) => {
+        console.error("Invalid phone:", validateErr);
+        form.setError("phoneNumber", {
+          type: "manual",
+          message: "Invalid phone number",
+        });
+      },
+    });
   };
 
   return (
@@ -112,8 +157,8 @@ const Signup = () => {
                     <FormControl>
                       <CountrySelector
                         value={field.value}
-                        onChange={(countryName, countryCode) => {
-                          form.setValue("phoneCode", countryCode);
+                        onChange={(countryName, phoneCode) => {
+                          form.setValue("phoneCode", phoneCode);
                           form.setValue("country", countryName);
                         }}
                       />
@@ -136,6 +181,7 @@ const Signup = () => {
                 )}
               />
             </div>
+
             {/* Specialty Buttons */}
             <FormField
               control={form.control}
@@ -174,7 +220,7 @@ const Signup = () => {
               className="w-full font-semibold py-6 rounded-md disabled:bg-muted disabled:text-foreground disabled:opacity-60"
               disabled={!form.formState.isValid}
             >
-              Sign up
+              Next
             </Button>
           </div>
           <p className="text-sm text-center text-muted-foreground ">

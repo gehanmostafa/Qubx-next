@@ -16,12 +16,46 @@ export const signupSchema = z.object({
     .regex(/^\d+$/, "Only digits allowed"),
   specialty: z
     .string()
+    .optional()
     .refine(
-      (val) => ["Surgeon", "Biomedical Engineer", "Other"].includes(val),
-      { message: "Please select your specialty" }
+      (val) =>
+        !val || ["Surgeon", "Biomedical Engineer", "Other"].includes(val),
+      { message: "Please select a valid specialty" }
     ),
 });
 export type TSignupValues = z.infer<typeof signupSchema>;
+
+export const otpSchema = z.object({
+  otp: z
+    .string()
+    .min(6, "OTP must be 6 digits")
+    .max(6, "OTP must be 6 digits")
+    .regex(/^\d{6}$/, "OTP must contain only digits"),
+});
+export type TOtpValues = z.infer<typeof otpSchema>;
+
+export const setPasswordSchema = z.object({
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters long")
+    .refine(
+      (val) => /[A-Z]/.test(val),
+      "Password must contain at least one uppercase letter"
+    )
+    .refine(
+      (val) => /[a-z]/.test(val),
+      "Password must contain at least one lowercase letter"
+    )
+    .refine(
+      (val) => /\d/.test(val),
+      "Password must contain at least one number"
+    )
+    .refine(
+      (val) => /[@$!%*?&._-]/.test(val),
+      "Password must contain at least one special character"
+    ),
+});
+export type TPasswordValues = z.infer<typeof setPasswordSchema>;
 
 export const loginSchema = z.object({
   email: z
@@ -35,12 +69,3 @@ export const loginSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 export type TLoginValues = z.infer<typeof loginSchema>;
-
-export const otpSchema = z.object({
-  otp: z
-    .string()
-    .min(6, "OTP must be 6 digits")
-    .max(6, "OTP must be 6 digits")
-    .regex(/^\d{6}$/, "OTP must contain only digits"),
-});
-export type TOtpValues = z.infer<typeof otpSchema>;

@@ -357,6 +357,197 @@
 
 // export default RequestsTable;
 
+// import { useMemo, useState } from "react";
+// import {
+//   Table,
+//   TableBody,
+//   TableCell,
+//   TableHead,
+//   TableHeader,
+//   TableRow,
+// } from "@/components/ui/table";
+// import { Input } from "@/components/ui/input";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select";
+// import { Button } from "@/components/ui/button";
+// import clsx from "clsx";
+// import { useGetAllRequests } from "@/store/server/request/useGetAllRequests";
+
+// const RequestsTable = ({ viewMode }: { viewMode: string }) => {
+
+//   const userId = localStorage.getItem("user_id");
+
+
+
+//   const doctorId = Number(userId) || 0;
+
+
+//   const [searchByDate, setSearchByDate] = useState("");
+//   const [searchByCaseId, setSearchByCaseId] = useState("");
+//   const [sortKey, setSortKey] = useState("");
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const itemsPerPage = 10;
+
+//   const { data: requests = [], isLoading, isError } = useGetAllRequests({
+//     doctor_id: doctorId,
+//     page: currentPage,
+//     page_size: itemsPerPage,
+//   });
+
+// console.log(requests);
+
+//   const filteredCases = useMemo(() => {
+//     let data = requests.filter((c: any) => {
+//       const matchDate =
+//         !searchByDate ||
+//         c.updated_at?.toLowerCase().includes(searchByDate.toLowerCase());
+//       const matchCaseId =
+//         !searchByCaseId ||
+//         String(c.id).toLowerCase().includes(searchByCaseId.toLowerCase());
+//       return matchDate && matchCaseId;
+//     });
+
+//     if (sortKey === "status") {
+//       data = [...data].sort((a, b) => a.status.localeCompare(b.status));
+//     } else if (sortKey === "date") {
+//       data = [...data].sort(
+//         (a, b) =>
+//           new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+//       );
+//     }
+
+//     return data;
+//   }, [requests, searchByDate, searchByCaseId, sortKey]);
+
+
+//   if (isLoading) return <p>Loading...</p>;
+//   if (isError) return <p>Error loading data.</p>;
+
+
+//   const totalPages = Math.ceil(filteredCases.length / itemsPerPage);
+//   const paginatedCases = filteredCases.slice(
+//     (currentPage - 1) * itemsPerPage,
+//     currentPage * itemsPerPage
+//   );
+
+
+//   return (
+//     <div className="flex flex-col gap-4">
+//       {/* Header */}
+//       <div className="flex justify-between mb-4 items-center">
+//         <div>
+//           <p className="font-semibold text-xl">Case Dashboard</p>
+//         </div>
+
+//         <div className="grid grid-cols-3 gap-3">
+//           <Input
+//             placeholder="Search by Date"
+//             className="bg-primary-foreground !h-9"
+//             value={searchByDate}
+//             onChange={(e) => setSearchByDate(e.target.value)}
+//           />
+//           <Input
+//             placeholder="Search by Case ID"
+//             className="bg-primary-foreground !h-9"
+//             value={searchByCaseId}
+//             onChange={(e) => setSearchByCaseId(e.target.value)}
+//           />
+//           <Select onValueChange={setSortKey}>
+//             <SelectTrigger className="bg-primary-foreground w-full">
+//               <SelectValue placeholder="Sort by: Status" />
+//             </SelectTrigger>
+//             <SelectContent>
+//               <SelectItem value="status">Status</SelectItem>
+//               <SelectItem value="date">Date</SelectItem>
+//             </SelectContent>
+//           </Select>
+//         </div>
+//       </div>
+
+//       {/* Table */}
+//       <Table>
+//         <TableHeader>
+//           <TableRow>
+//             <TableHead>ID</TableHead>
+//             <TableHead>Patient</TableHead>
+//             <TableHead>Service</TableHead>
+//             <TableHead>Status</TableHead>
+//             <TableHead>Updated</TableHead>
+//             <TableHead>Actions</TableHead>
+//           </TableRow>
+//         </TableHeader>
+
+//         <TableBody>
+//           {paginatedCases.map((item) => (
+//             <TableRow key={item.id}>
+//               <TableCell>#{item.id}</TableCell>
+//               <TableCell>{item.results?.fullname || "Anonymous"}</TableCell>
+//               <TableCell>{item.service_name}</TableCell>
+//               <TableCell
+//                 className={clsx({
+//                   "text-green-600 font-medium": item?.results?.statu?.name === "Ready",
+//                   "text-yellow-600": item?.results?.statu?.name === "Pending",
+//                   "text-gray-600": item?.results?.statu?.name === "Processing",
+//                 })}
+//               >
+//                 {item.status}
+//               </TableCell>
+//               <TableCell>
+//                 {new Date(item.updated_at).toLocaleDateString()}
+//               </TableCell>
+//               <TableCell>
+//                 {item.status === "Ready" ? (
+//                   <a
+//                     href={item.DICON_File}
+//                     target="_blank"
+//                     rel="noopener noreferrer"
+//                     className="underline text-blue-500"
+//                   >
+//                     View
+//                   </a>
+//                 ) : (
+//                   "—"
+//                 )}
+//               </TableCell>
+//             </TableRow>
+//           ))}
+//         </TableBody>
+//       </Table>
+
+//       {/* Pagination */}
+//       <div className="flex justify-center items-center gap-2 mt-4">
+//         <Button
+//           variant="outline"
+//           disabled={currentPage === 1}
+//           onClick={() => setCurrentPage((p) => p - 1)}
+//         >
+//           Prev
+//         </Button>
+//         <span>
+//           Page {currentPage} of {totalPages || 1}
+//         </span>
+//         <Button
+//           variant="outline"
+//           disabled={currentPage === totalPages}
+//           onClick={() => setCurrentPage((p) => p + 1)}
+//         >
+//           Next
+//         </Button>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default RequestsTable;
+
+
+"use client";
+
 import { useMemo, useState } from "react";
 import {
   Table,
@@ -379,13 +570,8 @@ import clsx from "clsx";
 import { useGetAllRequests } from "@/store/server/request/useGetAllRequests";
 
 const RequestsTable = ({ viewMode }: { viewMode: string }) => {
-
   const userId = localStorage.getItem("user_id");
-
-
-
   const doctorId = Number(userId) || 0;
-
 
   const [searchByDate, setSearchByDate] = useState("");
   const [searchByCaseId, setSearchByCaseId] = useState("");
@@ -393,55 +579,50 @@ const RequestsTable = ({ viewMode }: { viewMode: string }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const { data: requests = [], isLoading, isError } = useGetAllRequests({
+  const { data, isLoading, isError } = useGetAllRequests({
     doctor_id: doctorId,
     page: currentPage,
     page_size: itemsPerPage,
   });
 
-
   const filteredCases = useMemo(() => {
-    let data = requests.filter((c: any) => {
+    const requests = data?.results ?? [];
+
+    let filtered = requests.filter((req) => {
       const matchDate =
         !searchByDate ||
-        c.updated_at?.toLowerCase().includes(searchByDate.toLowerCase());
+        req.updatedAtStatus
+          ?.toLowerCase()
+          .includes(searchByDate.toLowerCase());
       const matchCaseId =
         !searchByCaseId ||
-        String(c.id).toLowerCase().includes(searchByCaseId.toLowerCase());
+        String(req.id).toLowerCase().includes(searchByCaseId.toLowerCase());
       return matchDate && matchCaseId;
     });
 
     if (sortKey === "status") {
-      data = [...data].sort((a, b) => a.status.localeCompare(b.status));
+      filtered = [...filtered].sort((a, b) =>
+        a.statu.name.localeCompare(b.statu.name)
+      );
     } else if (sortKey === "date") {
-      data = [...data].sort(
+      filtered = [...filtered].sort(
         (a, b) =>
-          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+          new Date(b.updatedAtStatus || b.created_at).getTime() -
+          new Date(a.updatedAtStatus || a.created_at).getTime()
       );
     }
 
-    return data;
-  }, [requests, searchByDate, searchByCaseId, sortKey]);
-
+    return filtered;
+  }, [data, searchByDate, searchByCaseId, sortKey]);
 
   if (isLoading) return <p>Loading...</p>;
   if (isError) return <p>Error loading data.</p>;
-
-
-  const totalPages = Math.ceil(filteredCases.length / itemsPerPage);
-  const paginatedCases = filteredCases.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
 
   return (
     <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex justify-between mb-4 items-center">
-        <div>
-          <p className="font-semibold text-xl">Case Dashboard</p>
-        </div>
+        <p className="font-semibold text-xl">Case Dashboard</p>
 
         <div className="grid grid-cols-3 gap-3">
           <Input
@@ -482,25 +663,27 @@ const RequestsTable = ({ viewMode }: { viewMode: string }) => {
         </TableHeader>
 
         <TableBody>
-          {paginatedCases.map((item) => (
+          {filteredCases.map((item) => (
             <TableRow key={item.id}>
               <TableCell>#{item.id}</TableCell>
-              <TableCell>{item.results?.fullname || "Anonymous"}</TableCell>
-              <TableCell>{item.service_name}</TableCell>
+              <TableCell>{item.patient?.fullname || "Anonymous"}</TableCell>
+              <TableCell>{item.service?.name || "-"}</TableCell>
               <TableCell
                 className={clsx({
-                  "text-green-600 font-medium": item?.results?.statu?.name === "Ready",
-                  "text-yellow-600": item?.results?.statu?.name === "Pending",
-                  "text-gray-600": item?.results?.statu?.name === "Processing",
+                  "text-green-600 font-medium": item.statu?.name === "Ready",
+                  "text-yellow-600": item.statu?.name === "Pending",
+                  "text-gray-600": item.statu?.name === "Processing",
                 })}
               >
-                {item.status}
+                {item.statu?.name || "-"}
               </TableCell>
               <TableCell>
-                {new Date(item.updated_at).toLocaleDateString()}
+                {new Date(
+                  item.updatedAtStatus || item.created_at
+                ).toLocaleDateString()}
               </TableCell>
               <TableCell>
-                {item.status === "Ready" ? (
+                {item.statu?.name === "Ready" && item.DICON_File ? (
                   <a
                     href={item.DICON_File}
                     target="_blank"
@@ -522,17 +705,17 @@ const RequestsTable = ({ viewMode }: { viewMode: string }) => {
       <div className="flex justify-center items-center gap-2 mt-4">
         <Button
           variant="outline"
-          disabled={currentPage === 1}
+          disabled={!data?.links.previous}
           onClick={() => setCurrentPage((p) => p - 1)}
         >
           Prev
         </Button>
         <span>
-          Page {currentPage} of {totalPages || 1}
+          Page {data?.page_number ?? 1} of {data?.total_pages ?? 1}
         </span>
         <Button
           variant="outline"
-          disabled={currentPage === totalPages}
+          disabled={!data?.links.next}
           onClick={() => setCurrentPage((p) => p + 1)}
         >
           Next

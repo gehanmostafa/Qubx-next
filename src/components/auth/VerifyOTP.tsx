@@ -15,8 +15,11 @@ import Authwrapper from "@/components/auth/Authwrapper";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useVerifyOtp } from "@/store/server/auth/useVerifyOtp";
 
 const VerifyOTP = () => {
+  const { mutate: verifyOtp, isPending } = useVerifyOtp();
+
   const form = useForm<TOtpValues>({
     resolver: zodResolver(otpSchema),
     defaultValues: { otp: "" },
@@ -25,6 +28,9 @@ const VerifyOTP = () => {
   const [otpDigits, setOtpDigits] = useState<string[]>(Array(6).fill(""));
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [timeLeft, setTimeLeft] = useState(120);
+
+  const email =
+    typeof window !== "undefined" ? localStorage.getItem("signup_email") : null;
 
   const handleChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
@@ -62,7 +68,26 @@ const VerifyOTP = () => {
 
   const onSubmit = async (values: TOtpValues) => {
     console.log(values);
-    router.push("/");
+    // router.push("/");
+
+    if (!email) {
+      console.error("No email found in localStorage");
+      return;
+    }
+
+    verifyOtp(
+      { email, otp: values.otp },
+      {
+        onSuccess: (data) => {
+          console.log("OTP verified successfully:", data);
+          localStorage.setItem("signup_otp", values.otp);
+          router.push("/set-password");
+        },
+        onError: (err) => {
+          console.error("Invalid OTP:", err);
+        },
+      }
+    );
   };
 
   return (
@@ -115,13 +140,23 @@ const VerifyOTP = () => {
             />
           </div>
 
-          <Button
-            type="submit"
-            className="w-full font-semibold py-6 rounded-md disabled:bg-muted disabled:text-ring"
-            disabled={form.watch("otp").length < 6}
-          >
-            Continue
-          </Button>
+          <div className="flex justify-around gap-4">
+            <Button
+              type="button"
+              variant={"outline"}
+              className="font-semibold py-6 rounded-md text-primary"
+              onClick={() => router.back()}
+            >
+              Back
+            </Button>
+            <Button
+              type="submit"
+              className="font-semibold py-6 rounded-md disabled:bg-muted disabled:text-primary"
+              disabled={form.watch("otp").length < 6}
+            >
+              Continue
+            </Button>
+          </div>
           <p className="text-sm text-center text-muted-foreground ">
             Already have an account?{" "}
             <Link

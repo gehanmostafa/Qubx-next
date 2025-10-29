@@ -67,7 +67,7 @@ export const CountrySelector = ({
                 <div
                   key={country.id}
                   onClick={() => {
-                    onChange(country.country_name, country.country_code);
+                    onChange(country.country_name, country.phone_code);
                     setOpen(false);
                   }}
                   className="flex justify-between items-center border rounded-md px-3 py-2 hover:bg-accent cursor-pointer"

@@ -1,9 +1,18 @@
+"use client";
+import { useAuthStore } from "@/store/client/useAuthStore";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect } from "react";
 
 const Navbar = () => {
-  const storedUser = localStorage.getItem("user");
-  const user = storedUser ? JSON.parse(storedUser) : null;
+  // const storedUser = localStorage.getItem("user");
+  // const user = storedUser ? JSON.parse(storedUser) : null;
+  const { user, setUser } = useAuthStore();
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) setUser(JSON.parse(storedUser));
+  }, [setUser]);
 
   return (
     <header className="bg-primary text-background">
