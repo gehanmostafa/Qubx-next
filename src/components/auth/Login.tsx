@@ -36,10 +36,23 @@ const Login = () => {
 
   const onSubmit = async (values: TLoginValues) => {
     console.log(values);
-    login({
-      identifier: values.email,
-      password: values.password,
-    });
+    login(
+      {
+        identifier: values.email,
+        password: values.password,
+      },
+      {
+        onSuccess: (data) => {
+          localStorage.setItem("access_token", data.access);
+          localStorage.setItem("refresh_token", data.refresh);
+          localStorage.setItem("user_id", data.user.id);
+          console.log("User logged in successfully:", data.user.id);
+        },
+        onError: (error) => {
+          console.error("Login failed:", error);
+        },
+      }
+    );
   };
 
   return (
