@@ -20,6 +20,7 @@ import { useEffect } from "react";
 import { useSendOtp } from "@/store/server/auth/useSendOtp";
 import { useValidateFullPhone } from "@/store/server/auth/useValidatePhone";
 import { useCheckMobile } from "@/store/server/auth/useCheckMobile";
+import { useCountries } from "@/store/server/useCountries";
 
 const Signup = () => {
   const { mutate: validatePhone } = useValidateFullPhone();
@@ -40,21 +41,51 @@ const Signup = () => {
     },
   });
   const router = useRouter();
+  // useEffect(() => {
+  //   const fetchCountry = async () => {
+  //     try {
+  //       const res = await fetch("https://py.qubx3d.com/api/v2/ip-info/");
+  //       const data = await res.json();
+  //       if (data?.country_code) {
+  //         form.setValue("phoneCode", data.country_code);
+  //       }
+  //     } catch (error) {
+  //       console.error("Failed to fetch country code", error);
+  //     }
+  //   };
+
+  //   fetchCountry();
+  // }, [form]);
+  const { data: countries } = useCountries();
+
   useEffect(() => {
     const fetchCountry = async () => {
       try {
         const res = await fetch("https://py.qubx3d.com/api/v2/ip-info/");
         const data = await res.json();
-        if (data?.country_code) {
-          form.setValue("phoneCode", data.country_code);
+
+        if (data?.country_code && countries) {
+          // نلاقي الدولة اللي ليها نفس الكود
+          const matched = countries.find(
+            (c) =>
+              c.country_code.toLowerCase() === data.country_code.toLowerCase()
+          );
+
+          if (matched) {
+            form.setValue("country", matched.country_name);
+            form.setValue("phoneCode", matched.phone_code);
+          }
         }
       } catch (error) {
-        console.error("Failed to fetch country code", error);
+        console.error("Failed to fetch country info", error);
       }
     };
 
-    fetchCountry();
-  }, [form]);
+    // نضمن إن countries اتحملت قبل ما نعمل fetch
+    if (countries && countries.length > 0) {
+      fetchCountry();
+    }
+  }, [countries, form]);
 
   const onSubmit = (values: TSignupValues) => {
     const fullPhone = `${values.phoneCode}${values.phoneNumber}`;
@@ -71,7 +102,7 @@ const Signup = () => {
               {
                 onSuccess: (otpRes) => {
                   console.log("OTP sent:", otpRes);
-                  localStorage.setItem("signup_email", values.email)
+                  localStorage.setItem("signup_email", values.email);
                   localStorage.setItem("signup_data", JSON.stringify(values));
                   router.push("/otp");
                 },
@@ -152,14 +183,22 @@ const Signup = () => {
               <FormField
                 control={form.control}
                 name="phoneCode"
-                render={({ field }) => (
+                render={() => (
                   <FormItem className="col-span-2">
                     <FormControl>
-                      <CountrySelector
+                      {/* <CountrySelector
                         value={field.value}
                         onChange={(countryName, phoneCode) => {
                           form.setValue("phoneCode", phoneCode);
                           form.setValue("country", countryName);
+                        }}
+                      /> */}
+                      <CountrySelector
+                        value={form.watch("country")}
+                        phoneCode={form.watch("phoneCode")}
+                        onChange={(countryName, phoneCode) => {
+                          form.setValue("country", countryName);
+                          form.setValue("phoneCode", phoneCode);
                         }}
                       />
                     </FormControl>

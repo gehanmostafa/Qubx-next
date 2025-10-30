@@ -15,10 +15,12 @@ import Image from "next/image";
 
 export const CountrySelector = ({
   value,
+  phoneCode,
   onChange,
 }: {
-  value: string;
-  onChange: (value: string, phoneCode: string) => void;
+  value: string; // country name
+  phoneCode: string; // phone code
+  onChange: (countryName: string, phoneCode: string) => void;
 }) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -33,9 +35,18 @@ export const CountrySelector = ({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+      {/* <DialogTrigger asChild>
         <div onClick={() => setOpen(true)}>
           <Input readOnly value={value || ""} placeholder="Country (auto)" />
+        </div>
+      </DialogTrigger> */}
+      <DialogTrigger asChild>
+        <div onClick={() => setOpen(true)}>
+          <Input
+            readOnly
+            value={value && phoneCode ? `${value} (${phoneCode})` : value || ""}
+            placeholder="Select country"
+          />
         </div>
       </DialogTrigger>
 
