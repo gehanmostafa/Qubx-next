@@ -607,6 +607,9 @@ const RequestsTable = ({ viewMode }: { viewMode: string }) => {
     return matchDate && matchCaseId;
   });
 
+
+  
+
   // Sort logic
   filtered = [...filtered].sort((a, b) => {
     switch (sortKey) {
