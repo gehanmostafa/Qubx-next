@@ -43,7 +43,6 @@ const Login = () => {
       },
       {
         onSuccess: (data) => {
-          localStorage.setItem("user_id", String(data.user.id));
           console.log("User logged in successfully:", data.user.id);
         },
         onError: (error) => {

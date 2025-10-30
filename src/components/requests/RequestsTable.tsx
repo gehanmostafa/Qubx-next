@@ -382,10 +382,7 @@
 
 //   const userId = localStorage.getItem("user_id");
 
-
-
 //   const doctorId = Number(userId) || 0;
-
 
 //   const [searchByDate, setSearchByDate] = useState("");
 //   const [searchByCaseId, setSearchByCaseId] = useState("");
@@ -424,17 +421,14 @@
 //     return data;
 //   }, [requests, searchByDate, searchByCaseId, sortKey]);
 
-
 //   if (isLoading) return <p>Loading...</p>;
 //   if (isError) return <p>Error loading data.</p>;
-
 
 //   const totalPages = Math.ceil(filteredCases.length / itemsPerPage);
 //   const paginatedCases = filteredCases.slice(
 //     (currentPage - 1) * itemsPerPage,
 //     currentPage * itemsPerPage
 //   );
-
 
 //   return (
 //     <div className="flex flex-col gap-4">
@@ -545,10 +539,9 @@
 
 // export default RequestsTable;
 
-
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Table,
   TableBody,
@@ -568,10 +561,26 @@ import {
 import { Button } from "@/components/ui/button";
 import clsx from "clsx";
 import { useGetAllRequests } from "@/store/server/request/useGetAllRequests";
+import { useAuthStore } from "@/store/client/useAuthStore";
+
+const statusColors: Record<string, string> = {
+  Pending: "bg-yellow-100 text-yellow-800 border border-yellow-300",
+  Ready: "bg-green-100 text-green-800 border border-green-300",
+  Processing: "bg-blue-100 text-blue-800 border border-blue-300",
+  Rejected: "bg-red-100 text-red-800 border border-red-300",
+};
 
 const RequestsTable = ({ viewMode }: { viewMode: string }) => {
-  const userId = localStorage.getItem("user_id");
-  const doctorId = Number(userId) || 0;
+  console.log(viewMode);
+  
+  const { user, setUser } = useAuthStore();
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) setUser(JSON.parse(storedUser));
+  }, [setUser]);
+
+  const doctorId = Number(user?.id) || 0;
 
   const [searchByDate, setSearchByDate] = useState("");
   const [searchByCaseId, setSearchByCaseId] = useState("");
@@ -586,34 +595,39 @@ const RequestsTable = ({ viewMode }: { viewMode: string }) => {
   });
 
   const filteredCases = useMemo(() => {
-    const requests = data?.results ?? [];
+  const requests = data?.results ?? [];
 
-    let filtered = requests.filter((req) => {
-      const matchDate =
-        !searchByDate ||
-        req.updatedAtStatus
-          ?.toLowerCase()
-          .includes(searchByDate.toLowerCase());
-      const matchCaseId =
-        !searchByCaseId ||
-        String(req.id).toLowerCase().includes(searchByCaseId.toLowerCase());
-      return matchDate && matchCaseId;
-    });
+  let filtered = requests.filter((req) => {
+    const matchDate =
+      !searchByDate ||
+      req.updatedAtStatus?.toLowerCase().includes(searchByDate.toLowerCase());
+    const matchCaseId =
+      !searchByCaseId ||
+      String(req.id).toLowerCase().includes(searchByCaseId.toLowerCase());
+    return matchDate && matchCaseId;
+  });
 
-    if (sortKey === "status") {
-      filtered = [...filtered].sort((a, b) =>
-        a.statu.name.localeCompare(b.statu.name)
-      );
-    } else if (sortKey === "date") {
-      filtered = [...filtered].sort(
-        (a, b) =>
+  // Sort logic
+  filtered = [...filtered].sort((a, b) => {
+    switch (sortKey) {
+      case "status":
+        return a.statu?.name.localeCompare(b.statu?.name || "");
+      case "updated":
+        return (
           new Date(b.updatedAtStatus || b.created_at).getTime() -
           new Date(a.updatedAtStatus || a.created_at).getTime()
-      );
+        );
+      case "service":
+        return (a.service?.name || "").localeCompare(b.service?.name || "");
+      case "anatomy":
+        return (a.anatomy?.name || "").localeCompare(b.anatomy?.name || "");
+      default:
+        return 0; // no sorting
     }
+  });
 
-    return filtered;
-  }, [data, searchByDate, searchByCaseId, sortKey]);
+  return filtered;
+}, [data, searchByDate, searchByCaseId, sortKey]);
 
   if (isLoading) return <p>Loading...</p>;
   if (isError) return <p>Error loading data.</p>;
@@ -643,7 +657,9 @@ const RequestsTable = ({ viewMode }: { viewMode: string }) => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="status">Status</SelectItem>
-              <SelectItem value="date">Date</SelectItem>
+              <SelectItem value="updated">Updated</SelectItem>
+              <SelectItem value="service">Service</SelectItem>
+              <SelectItem value="anatomy">Anatomy</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -668,14 +684,15 @@ const RequestsTable = ({ viewMode }: { viewMode: string }) => {
               <TableCell>#{item.id}</TableCell>
               <TableCell>{item.patient?.fullname || "Anonymous"}</TableCell>
               <TableCell>{item.service?.name || "-"}</TableCell>
-              <TableCell
-                className={clsx({
-                  "text-green-600 font-medium": item.statu?.name === "Ready",
-                  "text-yellow-600": item.statu?.name === "Pending",
-                  "text-gray-600": item.statu?.name === "Processing",
-                })}
-              >
-                {item.statu?.name || "-"}
+              <TableCell>
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    statusColors[item.statu?.name] ||
+                    "bg-gray-100 text-gray-800 border border-gray-300"
+                  }`}
+                >
+                  {item.statu?.name || "-"}
+                </span>
               </TableCell>
               <TableCell>
                 {new Date(
