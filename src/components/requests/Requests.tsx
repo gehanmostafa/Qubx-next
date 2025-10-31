@@ -29,6 +29,18 @@ const Requests = () => {
     if (storedUser) setUser(JSON.parse(storedUser));
   }, [setUser]);
 
+  // Automatically set view to grid on mobile
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setViewMode("grid");
+      }
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const doctorId = Number(user?.id) || 0;
 
   // APIs
@@ -112,11 +124,11 @@ const Requests = () => {
   return (
     <div className="bg-primary-foreground min-h-[88vh]">
       <div className="md:w-11/12 mx-auto py-4">
-        <div className="bg-background rounded-lg flex justify-between flex-col md:flex-row gap-y-2 md:gap-y-0 items-center px-8 py-2">
+        <div className="bg-background rounded-lg flex justify-between items-center px-8 py-2">
           <div className="space-x-2 flex text-muted-foreground">
             <Button
               variant={viewMode === "list" ? "secondary" : "outline"}
-              className="rounded-full w-24 h-12 text-sm font-semibold"
+              className="rounded-full w-24 h-12 text-sm font-semibold hidden md:flex"
               onClick={() => setViewMode("list")}
             >
               <FaListUl /> List

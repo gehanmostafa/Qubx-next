@@ -16,9 +16,12 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useVerifyOtp } from "@/store/server/auth/useVerifyOtp";
+import { useSendOtp } from "@/store/server/auth/useSendOtp";
 
 const VerifyOTP = () => {
   const { mutate: verifyOtp, isPending } = useVerifyOtp();
+  const { mutate: sendOtp, isPending: isResending } = useSendOtp();
+
 
   const form = useForm<TOtpValues>({
     resolver: zodResolver(otpSchema),
@@ -61,17 +64,26 @@ const VerifyOTP = () => {
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
   const handleResend = () => {
-    if (timeLeft > 0) return;
-    setTimeLeft(120);
-    console.log("Resent OTP");
-  };
+  if (timeLeft > 0 || !email) return;
+
+  sendOtp(
+    { email },
+    {
+      onSuccess: (data) => {
+        console.log("OTP resent successfully:", data);
+        setTimeLeft(120);
+      },
+      onError: (err) => {
+        console.error("Failed to resend OTP:", err);
+      },
+    }
+  );
+};
 
   const onSubmit = async (values: TOtpValues) => {
     console.log(values);
-    // router.push("/");
-
     if (!email) {
-      console.error("No email found in localStorage");
+      console.error("No email found");
       return;
     }
 

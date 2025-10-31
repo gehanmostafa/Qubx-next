@@ -8,7 +8,7 @@ import { IoMdArrowDropdown } from "react-icons/io";
 const Navbar = () => {
   const { user, setUser, logout } = useAuthStore();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-const router = useRouter();
+  const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
