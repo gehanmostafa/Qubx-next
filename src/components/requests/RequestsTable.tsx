@@ -22,6 +22,7 @@ import { useAuthStore } from "@/store/client/useAuthStore";
 import { Download, Upload } from "lucide-react";
 import { FaPaypal } from "react-icons/fa";
 import { IoEye } from "react-icons/io5";
+import { useAddPaypalPayments } from "@/store/server/paypal-payments/useAddPaypalPayment";
 
 // Helper function to get colors by case status
 const getStatusClasses = (status: string) => {
@@ -111,22 +112,22 @@ const getStatusClasses = (status: string) => {
 //   },
 // };
 
-const mapStatus = (oldStatus: string, isPaid: boolean): string => {
-  switch (oldStatus?.toLowerCase()) {
-    case "pending":
-      return "Awaiting DICOM Upload";
-    case "ready":
-      return "DICOM Review";
-    case "in progress":
-      return isPaid ? "In Progress" : "Pending Payment";
-    case "delivered to patient":
-      return "Delivered";
-    case "returned":
-      return "Reupload DICOM";
-    default:
-      return oldStatus || "-";
-  }
-};
+// const mapStatus = (oldStatus: string, isPaid: boolean): string => {
+//   switch (oldStatus?.toLowerCase()) {
+//     case "pending":
+//       return "Awaiting DICOM Upload";
+//     case "ready":
+//       return "DICOM Review";
+//     case "in progress":
+//       return isPaid ? "In Progress" : "Pending Payment";
+//     case "delivered to patient":
+//       return "Delivered";
+//     case "returned":
+//       return "Reupload DICOM";
+//     default:
+//       return oldStatus || "-";
+//   }
+// };
 
 const RequestsTable = ({ viewMode }: { viewMode: string }) => {
   const { user, setUser } = useAuthStore();
@@ -149,6 +150,21 @@ const RequestsTable = ({ viewMode }: { viewMode: string }) => {
     page: currentPage,
     page_size: itemsPerPage,
   });
+  //! Paypal
+  const { mutateAsync, isPending } = useAddPaypalPayments();
+  const handlePayNow = async (requestId: number) => {
+    try {
+      const data = await mutateAsync({ request_id: requestId });
+      const approvalUrl = data?.approval_url;
+      if (approvalUrl) {
+        window.open(approvalUrl, "_blank");
+      } else {
+        console.warn("No PayPal approval URL returned");
+      }
+    } catch (error) {
+      console.error("PayPal init failed:", error);
+    }
+  };
 
   const requests = data?.results ?? [];
 
@@ -166,7 +182,8 @@ const RequestsTable = ({ viewMode }: { viewMode: string }) => {
     filtered = [...filtered].sort((a, b) => {
       switch (sortKey) {
         case "status":
-          return a.statu?.name?.localeCompare(b.statu?.name || "") || 0;
+          return a.statusView?.localeCompare(b.statusView || "") || 0;
+
         case "updated":
           return (
             new Date(b.updatedAtStatus || b.created_at).getTime() -
@@ -236,8 +253,10 @@ const RequestsTable = ({ viewMode }: { viewMode: string }) => {
 
           <TableBody className="text-center">
             {filteredCases.map((item) => {
-              const oldStatus = item.statu?.name || "-";
-              const statusName = mapStatus(oldStatus, item.is_paid);
+              // const oldStatus = item.statu?.name || "-";
+              const statusName = item.statusView;
+              // || mapStatus(oldStatus, item.is_paid);
+
               // const colorSet = statusStyles[statusName] || {
               //   base: "bg-gray-100",
               //   text: "text-gray-800",
@@ -276,7 +295,7 @@ const RequestsTable = ({ viewMode }: { viewMode: string }) => {
                       </span> */}
                       <span
                         className={clsx(
-                          "px-3 py-1 rounded-md text-xs font-medium",
+                          "px-3 py-1 rounded-t-md text-xs font-medium w-full",
                           button
                         )}
                       >
@@ -290,7 +309,7 @@ const RequestsTable = ({ viewMode }: { viewMode: string }) => {
                             "DICOM Review",
                             "Pending Payment",
                             "inProgress",
-                            "Delivered",
+                            "Delivered to Patient",
                           ];
                           const currentIndex = stepOrder.indexOf(statusName);
                           const isActive = index <= currentIndex;
@@ -318,10 +337,35 @@ const RequestsTable = ({ viewMode }: { viewMode: string }) => {
                   {/* Actions */}
                   <TableCell className="flex justify-center items-center">
                     {statusName === "Pending Payment" ? (
-                      <Button className="bg-primary  text-white px-4 py-1 text-sm rounded-full">
-                        <FaPaypal /> Pay
-                      </Button>
-                    ) : statusName === "Awaiting DICOM Upload" ? (
+                      <>
+                        {item.created_by?.id === 403 &&
+                        !item.is_paid &&
+                        !item.is_gateway_paid ? (
+                          <Button
+                            className="bg-secondary text-white px-4 py-1 text-sm rounded-full flex items-center gap-2"
+                            onClick={() => handlePayNow(item.id)}
+                          >
+                            {isPending ? "Processing..." : "Pay Now"}{" "}
+                            <FaPaypal />
+                          </Button>
+                        ) : item.is_gateway_paid ? (
+                          <span className="text-green-500 font-semibold text-sm">
+                            Paid Online Successfully
+                          </span>
+                        ) : item.partial_paid ? (
+                          <span className="text-yellow-500 font-semibold text-sm">
+                            Partially Paid
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </>
+                    ) : // {statusName === "Pending Payment" ? (
+                    //   <Button className="bg-primary  text-white px-4 py-1 text-sm rounded-full">
+                    //     <FaPaypal /> Pay
+                    //   </Button>
+                    //
+                    statusName === "Awaiting DICOM Upload" ? (
                       <Button className="bg-secondary  text-white px-4 py-1 text-sm rounded-full">
                         <Upload />
                       </Button>
@@ -329,7 +373,7 @@ const RequestsTable = ({ viewMode }: { viewMode: string }) => {
                       <span className=" text-gray-400 px-4 py-1 text-sm ">
                         Our team is working on it
                       </span>
-                    ) : statusName === "Delivered" ? (
+                    ) : statusName === "Delivered to Patient" ? (
                       <div>
                         <Button className="bg-transparent border text-white px-4 py-1 text-sm rounded-full">
                           <IoEye /> 3D
@@ -412,8 +456,9 @@ const RequestsTable = ({ viewMode }: { viewMode: string }) => {
         {/* GRID Layout */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCases.map((item) => {
-            const oldStatus = item.statu?.name || "-";
-            const statusName = mapStatus(oldStatus, item.is_paid);
+            // const oldStatus = item.statusView || "-";
+            const statusName = item.statusView;
+            //  mapStatus(oldStatus, item.is_paid);
             // const colorSet = statusStyles[statusName] || {
             //   base: "bg-gray-100",
             //   text: "text-gray-700",
@@ -486,7 +531,6 @@ const RequestsTable = ({ viewMode }: { viewMode: string }) => {
                   </div>
                 </div>
 
-                {/* Footer Actions */}
                 <div className="mt-4 flex justify-between items-center">
                   <p className="text-xs text-gray-500">
                     {new Date(
@@ -495,9 +539,29 @@ const RequestsTable = ({ viewMode }: { viewMode: string }) => {
                   </p>
 
                   {statusName === "Pending Payment" ? (
-                    <Button className="bg-secondary text-white px-4 py-1 text-sm rounded-full flex items-center gap-2">
-                      <FaPaypal /> Pay 20$
-                    </Button>
+                    <>
+                      {item.created_by?.id === 403 &&
+                      !item.is_paid &&
+                      !item.is_gateway_paid ? (
+                        <Button
+                          className="bg-secondary text-white px-4 py-1 text-sm rounded-full flex items-center gap-2"
+                          onClick={() => handlePayNow(item.id)}
+                          disabled={isPending}
+                        >
+                          {isPending ? "Processing..." : "Pay Now"} <FaPaypal />
+                        </Button>
+                      ) : item.is_gateway_paid ? (
+                        <span className="text-green-500 font-semibold text-sm">
+                          Paid Online Successfully
+                        </span>
+                      ) : item.partial_paid ? (
+                        <span className="text-yellow-500 font-semibold text-sm">
+                          Partially Paid
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </>
                   ) : statusName === "Awaiting DICOM Upload" ? (
                     <Button className="bg-secondary text-white px-4 py-1 text-sm rounded-full flex items-center gap-2">
                       <Upload /> Upload
@@ -554,8 +618,6 @@ const RequestsTable = ({ viewMode }: { viewMode: string }) => {
 };
 
 export default RequestsTable;
-
-
 
 // import {
 //   Table,

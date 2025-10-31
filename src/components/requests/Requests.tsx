@@ -5,7 +5,7 @@ import { FaListUl } from "react-icons/fa";
 import { IoGrid } from "react-icons/io5";
 import { LuPlus, LuArrowRight } from "react-icons/lu";
 import { useEffect, useState } from "react";
-import Image from "next/image";
+
 import { useGetServices } from "@/store/server/request/useGetServices";
 import { useAuthStore } from "@/store/client/useAuthStore";
 import { useGetAnatomies } from "@/store/server/request/useGetAnatomies";
