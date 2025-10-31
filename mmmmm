@@ -1,0 +1,195 @@
+<div className="px-8 py-12 min-h-[400px]">
+  {step === 1 && (
+    <div className="grid grid-cols-5 gap-8">
+      <div className="flex col-span-2">
+        {!selectedService ? (
+          <p className="text-gray-400 text-lg">
+            Choose the service that best matches your needs
+          </p>
+        ) : (
+          <div className="flex flex-col items-center">
+            {/* <div className="w-46 h-46 relative mb-4">
+                              {selectedService.image ? (
+                                <Image
+                                  fill
+                                  src={selectedService.image}
+                                  alt={selectedService.name}
+                                  className="w-full h-full object-cover rounded-lg"
+                                />
+                              ) : (
+                                <span className="text-gray-400">No Image</span>
+                              )}
+                            </div>
+                            <h3 className="text-lg font-semibold ">
+                              {selectedService.name}:{" "}
+                              <span className="text-sm text-gray-500 font-normal">
+                                {selectedService.desc}
+                              </span>
+                            </h3> */}
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-2 col-span-3 gap-6">
+        {servicesData?.results?.map((service) => (
+          <button
+            key={service.id}
+            onClick={() => setSelectedService(service)}
+            className={`p-6 rounded-lg border-2 text-lg font-semibold transition-all ${
+              selectedService?.id === service.id
+                ? "border-secondary bg-blue-50 text-secondary"
+                : "border-gray-200 bg-white text-gray-900 hover:border-gray-300"
+            }`}
+          >
+            {service.name}
+          </button>
+        ))}
+      </div>
+    </div>
+  )}
+
+  {step === 2 && (
+    <div className="grid grid-cols-2">
+      <p>mmmm</p>
+      <div className="grid space-y-4">
+        <div className="grid grid-cols-2 gap-6">
+          {anatomies.map((anatomy) => (
+            <button
+              key={anatomy}
+              onClick={() => setSelectedAnatomy(anatomy)}
+              className={`px-8 py-8 rounded-lg border-2 text-lg font-semibold transition-all ${
+                selectedAnatomy === anatomy
+                  ? "border-secondary bg-blue-50 text-secondary"
+                  : "border-gray-200 bg-white text-gray-900 hover:border-gray-300"
+              }`}
+            >
+              {anatomy}
+            </button>
+          ))}
+        </div>
+        <textarea
+          placeholder="message"
+          className="w-full border rounded resize-none"
+          rows={4}
+        />
+      </div>
+    </div>
+  )}
+
+  {step === 3 && (
+    <div className="max-w-2xl mx-auto">
+      <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
+        <div className="text-gray-400 mb-4">
+          <svg
+            className="w-16 h-16 mx-auto"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+            />
+          </svg>
+        </div>
+        <p className="text-lg font-medium text-gray-700 mb-2">
+          Drop your DICOM files here
+        </p>
+        <p className="text-sm text-gray-500 mb-4">or click to browse</p>
+        <button className="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-blue-700 transition-colors">
+          Choose Files
+        </button>
+      </div>
+    </div>
+  )}
+</div>;
+
+{
+  /* Dialog Footer */
+}
+<div className="px-8 py-6 border-t flex justify-between items-center">
+  <div className="flex gap-2">
+    <button
+      onClick={closeDialog}
+      className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium transition-colors"
+    >
+      Cancel
+    </button>
+    {step > 1 && (
+      <button
+        onClick={prevStep}
+        className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium transition-colors"
+      >
+        Back
+      </button>
+    )}
+  </div>
+
+  <button
+    onClick={
+      step === 3
+        ? () => {
+            /* هنا Submit logic */
+          }
+        : nextStep
+    }
+    disabled={
+      (step === 1 && !selectedService) || (step === 2 && !selectedAnatomy)
+    }
+    className={`px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors ${
+      (step === 1 && !selectedService) || (step === 2 && !selectedAnatomy)
+        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+        : "bg-secondary text-background cursor-pointer"
+    }`}
+  >
+    {step === 3 ? "Submit" : "Next"} <LuArrowRight className="w-5 h-5" />
+  </button>
+</div>;
+/////////////////////////////////////////////////////////////////////////////////////
+{
+  /* Steps Indicator */
+}
+{
+  /* <div className="flex gap-4 border p-2 rounded-md mb-2">
+                  {["Select Service", "Select Anatomy", "Upload Imaging"].map(
+                    (label, index) => (
+                      <div
+                        key={index}
+                        className={`flex-1 rounded-lg px-6 py-4 flex items-center gap-3 cursor-pointer ${
+                          step === index + 1
+                            ? "bg-secondary text-white"
+                            : "bg-gray-100 text-gray-400"
+                        }`}
+                        // onClick={() => setStep(index + 1)}
+                        onClick={() => {
+                          // Prevent skipping steps
+                          if (index === 1 && !selectedServiceId) {
+                            toast.error("Please select a service first");
+                            return;
+                          }
+                          if (index === 2 && !selectedAnatomy) {
+                            toast.error("Please select an anatomy first");
+                            return;
+                          }
+                          setStep(index + 1);
+                        }}
+                      >
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${
+                            step === index + 1
+                              ? "bg-white text-secondary"
+                              : "bg-white text-gray-400"
+                          }`}
+                        >
+                          0{index + 1}
+                        </div>
+                        <div>
+                          <div className="font-semibold">Step {index + 1}</div>
+                          <div className="text-sm">{label}</div>
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div> */
+}

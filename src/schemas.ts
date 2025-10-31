@@ -69,3 +69,14 @@ export const loginSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 export type TLoginValues = z.infer<typeof loginSchema>;
+
+
+export const newRequestSchema = z.object({
+  serviceId: z.number({ message: "Service is required" }),
+  anatomyId: z.number({ message: "Anatomy is required" }),
+  // message: z.string().optional(),
+  files: z.any().optional(),
+  imagingUrl: z.any().optional(),
+});
+
+export type NewRequestValues = z.infer<typeof newRequestSchema>;

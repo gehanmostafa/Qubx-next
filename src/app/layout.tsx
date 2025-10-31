@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ReactQueryProvider from "@/providers/ReactQueryProvider";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,11 +14,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-
 export const metadata: Metadata = {
   title: "Qubx-Doctor",
   description: "Qubx Doctor Website",
-  icons: "/qubx-logo-black.png"
+  icons: "/qubx-logo-black.png",
 };
 
 export default function RootLayout({
@@ -32,6 +32,7 @@ export default function RootLayout({
       >
         <ReactQueryProvider>
           {children}
+          <Toaster richColors position="top-center" />
         </ReactQueryProvider>
       </body>
     </html>
